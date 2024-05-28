@@ -75,11 +75,8 @@ const DrawerNavigator = (
   const drawerRouter = DrawerRouter(routeConfigs, mergedConfig);
 
   // TODO: don't have time to fix it right now
-  const navigator = createNavigator(
-    DrawerView as any,
-    drawerRouter,
-    mergedConfig
-  );
+  // @ts-ignore
+  const navigator = createNavigator(DrawerView, drawerRouter, mergedConfig);
   return navigator;
 };
 

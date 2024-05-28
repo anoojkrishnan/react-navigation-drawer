@@ -4,9 +4,9 @@ import {
   SceneView,
   ThemeColors,
   ThemeContext,
-  NavigationScreenProp,
+  NavigationProp,
 } from 'react-navigation';
-import { ScreenContainer, screensEnabled } from 'react-native-screens';
+import { ScreenContainer } from 'react-native-screens';
 
 import * as DrawerActions from '../routers/DrawerActions';
 import DrawerSidebar from './DrawerSidebar';
@@ -41,7 +41,7 @@ type DrawerOptions = {
 
 type Props = {
   lazy: boolean;
-  navigation: NavigationScreenProp<NavigationDrawerState>;
+  navigation: NavigationProp<NavigationDrawerState>;
   descriptors: SceneDescriptorMap;
   navigationConfig: DrawerOptions & {
     contentComponent?: React.ComponentType<DrawerContentComponentProps>;
@@ -49,7 +49,6 @@ type Props = {
     contentOptions?: object;
   };
   screenProps: unknown;
-  detachInactiveScreens: boolean;
 };
 
 type State = {
@@ -61,7 +60,6 @@ type State = {
  * Component that renders the drawer.
  */
 export default class DrawerView extends React.PureComponent<Props, State> {
-  // eslint-disable-next-line react/sort-comp
   static contextType = ThemeContext;
   static defaultProps = {
     lazy: true,
@@ -87,41 +85,16 @@ export default class DrawerView extends React.PureComponent<Props, State> {
   };
 
   componentDidMount() {
-    // If drawerLockMode was set to `locked-open`, we should open the drawer on mount
-    if (this.getLockMode(this.props) === 'locked-open') {
-      this.handleDrawerOpen();
-    }
-
     Dimensions.addEventListener('change', this.updateWidth);
   }
 
-  componentDidUpdate(prevProps: Props) {
-    const prevLockMode = this.getLockMode(prevProps);
-    const nextLockMode = this.getLockMode(this.props);
-
-    if (prevLockMode !== nextLockMode) {
-      if (nextLockMode === 'locked-open') {
-        this.handleDrawerOpen();
-      } else {
-        this.handleDrawerClose();
-      }
-    }
-  }
-
   componentWillUnmount() {
-    Dimensions.removeEventListener('change', this.updateWidth);
+    //Dimensions.removeEventListener('change', this.updateWidth);
   }
 
   context!: React.ContextType<typeof ThemeContext>;
 
   private drawerGestureRef = React.createRef<PanGestureHandler>();
-
-  private getLockMode = ({ navigation, descriptors }: Props) => {
-    const activeKey = navigation.state.routes[navigation.state.index].key;
-    const { drawerLockMode } = descriptors[activeKey].options;
-
-    return drawerLockMode;
-  };
 
   private handleDrawerOpen = () => {
     const { navigation } = this.props;
@@ -161,13 +134,17 @@ export default class DrawerView extends React.PureComponent<Props, State> {
         drawerOpenProgress={progress}
         navigation={this.props.navigation}
         descriptors={this.props.descriptors}
+        contentComponent={this.props.navigationConfig.contentComponent}
+        contentOptions={this.props.navigationConfig.contentOptions}
+        drawerPosition={this.props.navigationConfig.drawerPosition}
+        style={this.props.navigationConfig.style}
         {...this.props.navigationConfig}
       />
     );
   };
 
   private renderContent = () => {
-    let { lazy, navigation, detachInactiveScreens = true } = this.props;
+    let { lazy, navigation } = this.props;
     let { loaded } = this.state;
     let { routes } = navigation.state;
 
@@ -183,11 +160,8 @@ export default class DrawerView extends React.PureComponent<Props, State> {
         />
       );
     } else {
-      const enabled = screensEnabled?.() && detachInactiveScreens;
-
       return (
-        // @ts-ignore
-        <ScreenContainer enabled={enabled} style={styles.content}>
+        <ScreenContainer style={styles.content}>
           {routes.map((route, index) => {
             if (lazy && !loaded.includes(index)) {
               // Don't render a screen if we've never navigated to it
@@ -205,7 +179,6 @@ export default class DrawerView extends React.PureComponent<Props, State> {
                   { opacity: isFocused ? 1 : 0 },
                 ]}
                 isVisible={isFocused}
-                enabled={detachInactiveScreens}
               >
                 <SceneView
                   navigation={descriptor.navigation}
@@ -250,7 +223,7 @@ export default class DrawerView extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { navigation, navigationConfig } = this.props;
+    const { navigation } = this.props;
     const {
       drawerType,
       sceneContainerStyle,
@@ -259,19 +232,27 @@ export default class DrawerView extends React.PureComponent<Props, State> {
       hideStatusBar,
       statusBarAnimation,
       gestureHandlerProps,
-    } = navigationConfig;
+    } = this.props.navigationConfig;
+    const activeKey = navigation.state.routes[navigation.state.index].key;
+    const { drawerLockMode } = this.props.descriptors[activeKey].options;
 
-    const drawerLockMode = this.getLockMode(this.props);
     const drawerBackgroundColor = this.getDrawerBackgroundColor();
     const overlayColor = this.getOverlayColor();
+
+    const isOpen =
+      drawerLockMode === 'locked-closed'
+        ? false
+        : drawerLockMode === 'locked-open'
+        ? true
+        : this.props.navigation.state.isDrawerOpen;
 
     return (
       <DrawerGestureContext.Provider value={this.drawerGestureRef}>
         <Drawer
-          open={navigation.state.isDrawerOpen}
-          gestureEnabled={
-            drawerLockMode !== 'locked-open' &&
-            drawerLockMode !== 'locked-closed'
+          open={isOpen}
+          locked={
+            drawerLockMode === 'locked-open' ||
+            drawerLockMode === 'locked-closed'
           }
           onOpen={this.handleDrawerOpen}
           onClose={this.handleDrawerClose}

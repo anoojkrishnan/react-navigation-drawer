@@ -18,8 +18,7 @@ class HomeScreen extends React.Component {
   }
 }
 
-// eslint-disable-next-line jest/no-disabled-tests
-it.skip('renders successfully', () => {
+it('renders successfully', () => {
   const MyDrawerNavigator = createDrawerNavigator({ Home: HomeScreen });
   const App = createAppContainer(MyDrawerNavigator);
   const rendered = render(<App />).toJSON();
@@ -38,7 +37,6 @@ it.skip('renders successfully', () => {
       }
     >
       <View
-        importantForAccessibility="yes"
         style={
           Object {
             "flex": 1,
