@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ViewStyle } from 'react-native';
-import { ThemeContext, NavigationProp } from 'react-navigation';
+import { ThemeContext, NavigationScreenProp } from 'react-navigation';
 import { NavigationDrawerState, DrawerContentComponentProps, SceneDescriptorMap } from '../types';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 declare type DrawerOptions = {
@@ -23,7 +23,7 @@ declare type DrawerOptions = {
 };
 declare type Props = {
     lazy: boolean;
-    navigation: NavigationProp<NavigationDrawerState>;
+    navigation: NavigationScreenProp<NavigationDrawerState>;
     descriptors: SceneDescriptorMap;
     navigationConfig: DrawerOptions & {
         contentComponent?: React.ComponentType<DrawerContentComponentProps>;
@@ -31,6 +31,7 @@ declare type Props = {
         contentOptions?: object;
     };
     screenProps: unknown;
+    detachInactiveScreens: boolean;
 };
 declare type State = {
     loaded: number[];
@@ -49,9 +50,11 @@ export default class DrawerView extends React.PureComponent<Props, State> {
     };
     state: State;
     componentDidMount(): void;
+    componentDidUpdate(prevProps: Props): void;
     componentWillUnmount(): void;
     context: React.ContextType<typeof ThemeContext>;
     private drawerGestureRef;
+    private getLockMode;
     private handleDrawerOpen;
     private handleDrawerClose;
     private updateWidth;

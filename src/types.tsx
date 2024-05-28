@@ -3,7 +3,6 @@ import {
   NavigationState,
   NavigationRoute,
   NavigationParams,
-  NavigationProp,
   NavigationDescriptor,
   SupportedThemes,
   NavigationScreenConfig,
@@ -32,15 +31,25 @@ export type NavigationDrawerProp<
   jumpTo: (routeName: string, key?: string) => void;
 };
 
+export type DrawerLockMode = 'unlocked' | 'locked-closed' | 'locked-open';
+
+export type DrawerIconProps = {
+  tintColor?: string;
+  focused: boolean;
+};
+
+export type DrawerLabelProps = {
+  tintColor?: string;
+  focused: boolean;
+};
+
 export type NavigationDrawerOptions = {
   title?: string;
   drawerLabel?:
     | React.ReactNode
-    | ((props: { tintColor?: string; focused: boolean }) => React.ReactNode);
-  drawerIcon?:
-    | React.ReactNode
-    | ((props: { tintColor?: string; focused: boolean }) => React.ReactNode);
-  drawerLockMode?: 'unlocked' | 'locked-closed' | 'locked-open';
+    | ((props: DrawerLabelProps) => React.ReactNode);
+  drawerIcon?: React.ReactNode | ((props: DrawerIconProps) => React.ReactNode);
+  drawerLockMode?: DrawerLockMode;
 };
 
 export type NavigationDrawerConfig = {
@@ -50,7 +59,7 @@ export type NavigationDrawerConfig = {
   drawerWidth?: number | (() => number);
   drawerPosition?: 'left' | 'right';
   drawerType?: 'front' | 'back' | 'slide';
-  drawerLockMode?: 'unlocked' | 'locked-closed' | 'locked-open';
+  drawerLockMode?: DrawerLockMode;
   keyboardDismissMode?: 'none' | 'on-drag';
   swipeEdgeWidth?: number;
   swipeDistanceThreshold?: number;
@@ -60,6 +69,7 @@ export type NavigationDrawerConfig = {
   drawerBackgroundColor?: ThemedColor;
   overlayColor?: ThemedColor;
   screenContainerStyle?: StyleProp<ViewStyle>;
+  detachInactiveScreens?: boolean;
 };
 
 export type NavigationDrawerRouterConfig = {
@@ -67,9 +77,67 @@ export type NavigationDrawerRouterConfig = {
   resetOnBlur?: boolean;
   initialRouteName?: string;
   contentComponent?: React.ComponentType<DrawerContentComponentProps>;
-  contentOptions?: object;
+  contentOptions?: {
+    /**
+     * the array of routes, can be modified or overridden
+     */
+    items?: NavigationRoute[];
+    /**
+     * key identifying the active route
+     */
+    activeItemKey?: string;
+    /**
+     * label and icon color of the active label
+     */
+    activeTintColor?: string;
+    /**
+     * background color of the active label
+     */
+    activeBackgroundColor?: string;
+    /**
+     * label and icon color of the inactive label
+     */
+    inactiveTintColor?: string;
+    /**
+     * background color of the inactive label
+     */
+    inactiveBackgroundColor?: string;
+    /**
+     * function to be invoked when an item is pressed
+     */
+    onItemPress?: (info: DrawerItem) => void;
+    /**
+     * style object for the content section
+     */
+    itemsContainerStyle?: StyleProp<ViewStyle>;
+    /**
+     * style object for the single item, which can contain an Icon and/or a Label
+     */
+    itemStyle?: StyleProp<ViewStyle>;
+    /**
+     * style object to overwrite Text style inside content section, when your label is a string
+     */
+    labelStyle?: StyleProp<TextStyle>;
+    /**
+     * style object to overwrite Text style of the active label, when your label is a string (merged with labelStyle)
+     */
+    activeLabelStyle?: StyleProp<TextStyle>;
+    /**
+     * style object to overwrite Text style of the inactive label, when your label is a string (merged with labelStyle)
+     */
+    inactiveLabelStyle?: StyleProp<TextStyle>;
+    /**
+     * style object to overwrite View icon container styles
+     */
+    iconContainerStyle?: StyleProp<ViewStyle>;
+  };
   backBehavior?: 'none' | 'initialRoute' | 'history';
 };
+
+export interface DrawerItem {
+  route: NavigationRoute;
+  focused: boolean;
+}
 
 export type ThemedColor =
   | string
@@ -95,10 +163,11 @@ export type DrawerNavigatorItemsProps = {
   inactiveLabelStyle?: StyleProp<TextStyle>;
   iconContainerStyle?: StyleProp<ViewStyle>;
   drawerPosition: 'left' | 'right';
+  screenProps: unknown;
 };
 
 export type DrawerContentComponentProps = DrawerNavigatorItemsProps & {
-  navigation: NavigationProp<NavigationDrawerState>;
+  navigation: NavigationScreenProp<NavigationDrawerState>;
   descriptors: SceneDescriptorMap;
   drawerOpenProgress: Animated.Node<number>;
   screenProps: unknown;
@@ -119,7 +188,8 @@ export type NavigationDrawerScreenComponent<
 > = React.ComponentType<NavigationDrawerScreenProps<Params, ScreenProps>> & {
   navigationOptions?: NavigationScreenConfig<
     NavigationDrawerOptions,
-    NavigationDrawerProp<NavigationRoute, Params>
+    NavigationDrawerProp<NavigationRoute, Params>,
+    ScreenProps
   >;
 };
 
