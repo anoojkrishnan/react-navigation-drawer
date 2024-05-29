@@ -33,8 +33,7 @@
     "url": "https://github.com/react-navigation/drawer/issues"
   },
   "homepage": "https://github.com/react-navigation/drawer#readme",
-  "devDependencies": {
-    "@react-native-community/bob": "^0.16.2",
+  "devDependencies": {    
     "@types/react": "^16.9.53",
     "@types/react-native": "^0.63.30",
     "del-cli": "^3.0.1",
